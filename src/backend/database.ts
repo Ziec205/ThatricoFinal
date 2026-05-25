@@ -45,11 +45,23 @@ if (process.env.DATABASE_URL) {
   client = {
     query: (text: string, params?: any[]) => {
       const stmt = db.prepare(text.replace(/\$\d+/g, '?'));
-      if (text.trim().toLowerCase().startsWith('select')) {
+      const normalizedText = text.trim().toLowerCase();
+
+      if (normalizedText.startsWith('select')) {
         return { rows: stmt.all(...(params || [])) } as any;
       }
+
       const info = stmt.run(...(params || []));
-      return { rows: [], lastInsertRowid: info.lastInsertRowid } as any;
+
+      if (normalizedText.startsWith('delete') && normalizedText.includes('returning')) {
+        return {
+          rows: info.changes > 0 ? [{ id: params?.[0] }] : [],
+          changes: info.changes,
+          lastInsertRowid: info.lastInsertRowid
+        } as any;
+      }
+
+      return { rows: [], changes: info.changes, lastInsertRowid: info.lastInsertRowid } as any;
     },
     raw: db
   };

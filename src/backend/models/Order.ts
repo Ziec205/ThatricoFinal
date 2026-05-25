@@ -63,9 +63,18 @@ export class OrderModel {
   }
 
   static async deleteOrder(id: number) {
-    const res = await db.query(`DELETE FROM orders WHERE id = $1 RETURNING id`, [id]);
-    if (!res.rows[0]) {
-      throw new Error(`Order with id ${id} not found`);
+    if (process.env.DATABASE_URL) {
+      const res = await db.query(`DELETE FROM orders WHERE id = $1 RETURNING id`, [id]);
+      const affectedRows = (res as any).rowCount ?? (res as any).changes ?? res.rows?.length ?? 0;
+
+      if (!affectedRows) {
+        throw new Error(`Order with id ${id} not found`);
+      }
+    } else {
+      // Local SQLite should behave like an idempotent delete so the UI does not
+      // show a false error when the row is already gone or the driver does not
+      // expose RETURNING metadata the same way as PostgreSQL.
+      await db.query(`DELETE FROM orders WHERE id = $1`, [id]);
     }
 
     const countRes = await db.query(`SELECT COUNT(*) AS count FROM orders`);

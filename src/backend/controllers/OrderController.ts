@@ -127,17 +127,8 @@ export class OrderController {
     try {
       const { id } = req.params;
       const orderId = Number(id);
-      
-      // Verify order exists before deleting
-        const order = await OrderModel.getById(orderId);
-      if (!order) {
-        return res.status(404).json({ 
-          success: false, 
-          error: `Không tìm thấy đơn hàng #${orderId}` 
-        });
-      }
-      
-        await OrderModel.deleteOrder(orderId);
+
+      await OrderModel.deleteOrder(orderId);
       res.json({ success: true, message: `Đã xóa đơn hàng #${orderId}` });
     } catch (error: any) {
       console.error('Delete order error:', error);

@@ -155,8 +155,10 @@ export default function AdminDashboard() {
       if (Array.isArray(data)) {
         setBackendOrders(data);
       }
+      return Array.isArray(data) ? data : [];
     } catch (e) {
       console.error(e);
+      return [];
     }
   };
 
@@ -227,6 +229,9 @@ export default function AdminDashboard() {
     
     setIsDeleting(id);
     setDeleteConfirmModal({ isOpen: false, orderId: null });
+
+    const snapshot = backendOrders;
+    setBackendOrders(prev => prev.filter(o => o.id !== id));
     
     try {
       console.log('[Admin] Sending DELETE request to /api/orders/' + id);
@@ -239,19 +244,33 @@ export default function AdminDashboard() {
       
       if (!res.ok || !data.success) {
         const errorMsg = data.error || 'Lỗi không xác định';
+        const latestOrders = await fetchOrders();
+        const orderStillExists = latestOrders.some(order => order.id === id);
+
+        if (!orderStillExists) {
+          toast.success('Đã xóa đơn hàng thành công!');
+          return;
+        }
+
+        setBackendOrders(snapshot);
         toast.error('Lỗi khi xóa đơn hàng: ' + errorMsg);
         console.error('[Admin] Deletion failed:', errorMsg);
         return;
       }
       
       toast.success('Đã xóa đơn hàng thành công!');
-      setBackendOrders(prev => {
-        const updated = prev.filter(o => o.id !== id);
-        console.log('[Admin] UI state updated, remaining orders:', updated.length);
-        return updated;
-      });
+      await fetchOrders();
     } catch (error) {
       console.error('[Admin] Network or server error during deletion:', error);
+      const latestOrders = await fetchOrders();
+      const orderStillExists = latestOrders.some(order => order.id === id);
+
+      if (!orderStillExists) {
+        toast.success('Đã xóa đơn hàng thành công!');
+        return;
+      }
+
+      setBackendOrders(snapshot);
       toast.error('Lỗi kết nối server, vui lòng thử lại sau.');
     } finally {
       setIsDeleting(null);
