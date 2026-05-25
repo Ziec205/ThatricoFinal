@@ -56,6 +56,22 @@ export class OrderModel {
     if (!res.rows[0]) {
       throw new Error(`Order with id ${id} not found`);
     }
+
+    const countRes = await db.query(`SELECT COUNT(*) AS count FROM orders`);
+    const remainingOrders = Number((countRes.rows[0] as any)?.count || 0);
+
+    if (remainingOrders === 0) {
+      try {
+        await db.query(`ALTER SEQUENCE orders_id_seq RESTART WITH 1`);
+      } catch {
+        try {
+          await db.query(`DELETE FROM sqlite_sequence WHERE name = 'orders'`);
+        } catch {
+          // No-op: some databases do not expose a resettable sequence table.
+        }
+      }
+    }
+
     return res;
   }
 }

@@ -262,26 +262,23 @@ export default function AdminDashboard() {
 
     setIsUploadingImage(true);
     try {
-      const formData = new FormData();
-      formData.append('image', file);
-
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
+      const imageDataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('Không thể đọc file ảnh'));
+        reader.readAsDataURL(file);
       });
 
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        toast.error('Lỗi upload: ' + (data.error || 'Không rõ'));
+      if (!imageDataUrl) {
+        toast.error('Không thể tải ảnh lên');
         return;
       }
 
-      // Update product with uploaded image path
+      // Update product with an embedded image so it survives reloads.
       if (editingProduct) {
         setEditingProduct({
           ...editingProduct,
-          image: data.path
+          image: imageDataUrl
         });
       }
 

@@ -4,7 +4,6 @@ import Database from 'better-sqlite3';
 import path from 'path';
 
 dotenv.config();
-dotenv.config();
 
 type QueryResult = { rows: any[]; lastInsertRowid?: number };
 
