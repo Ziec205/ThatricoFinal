@@ -81,54 +81,70 @@ export default function TrackOrderPage() {
     setError('');
     setOrder(null);
 
-    const normalizedPhone = phone.replace(/\D/g, '');
+    const rawInput = (phone || '').trim();
+    const normalizedDigits = rawInput.replace(/\D/g, '');
 
-    if (!normalizedPhone) {
-      setError('Vui lòng nhập số điện thoại đặt hàng.');
+    if (!rawInput) {
+      setError('Vui lòng nhập số điện thoại hoặc mã 5 chữ số đặt hàng.');
       setIsSearching(false);
       return;
     }
 
     const lookupOrder = async () => {
+      const isFiveDigitCode = /^\d{5}$/.test(normalizedDigits);
+
       try {
         const response = await fetch('/api/orders');
         if (response.ok) {
           const payload = await response.json();
 
           if (Array.isArray(payload)) {
-            const matchedOrder = [...payload]
-              .reverse()
-              .find((item: BackendOrder) => String(item.phone || '').replace(/\D/g, '') === normalizedPhone);
+            const list = [...payload].reverse();
 
-            if (matchedOrder) {
-              return matchedOrder;
-            }
+            const matchedOrder = list.find((item: BackendOrder) => {
+              const itemPhone = String(item.phone || '').replace(/\D/g, '');
+              const itemCode = String(item.orderCode || '').replace(/\D/g, '');
+
+              if (isFiveDigitCode) {
+                return itemCode === normalizedDigits || String(item.orderCode || '') === rawInput;
+              }
+
+              return itemPhone === normalizedDigits;
+            });
+
+            if (matchedOrder) return matchedOrder;
           }
         }
       } catch {
-        // Fall through to local cache lookup.
+        // ignore and try local
       }
 
-      const localOrder = getLocalOrder(normalizedPhone);
-      if (localOrder) {
-        return localOrder;
-      }
+      const localOrder = getLocalOrder(normalizedDigits, rawInput);
+      if (localOrder) return localOrder;
 
-      const cachedOrder = getCachedOrder(normalizedPhone);
-      if (cachedOrder) {
-        return cachedOrder;
-      }
+      const cachedOrder = getCachedOrder(normalizedDigits, rawInput);
+      if (cachedOrder) return cachedOrder;
 
-      throw new Error('Không tìm thấy đơn hàng với số điện thoại này.');
+      throw new Error(isFiveDigitCode ? 'Không tìm thấy đơn với mã 5 chữ số này.' : 'Không tìm thấy đơn hàng với số điện thoại này.');
     };
 
-    const getLocalOrder = (searchPhone: string): BackendOrder | null => {
+    const getLocalOrder = (searchDigits: string, rawInput?: string): BackendOrder | null => {
       try {
         const rawOrders = localStorage.getItem('thatrico_orders_v2');
         if (!rawOrders) return null;
 
         const orders = JSON.parse(rawOrders) as LocalOrderSnapshot[];
-        const matchedOrder = orders.find((order) => String(order.phone || '').replace(/\D/g, '') === searchPhone);
+        const matchedOrder = orders.find((order) => {
+          const orderPhoneDigits = String(order.phone || '').replace(/\D/g, '');
+          const orderCodeDigits = String(order.id || '').replace(/\D/g, '');
+
+          if (rawInput && /^\d{5}$/.test(String(rawInput).replace(/\D/g, ''))) {
+            // if code search, check orderCode (stored in id for local orders)
+            return String(order.orderCode || order.id || '') === rawInput || orderCodeDigits === searchDigits;
+          }
+
+          return orderPhoneDigits === searchDigits;
+        });
 
         if (!matchedOrder) return null;
 
@@ -148,17 +164,28 @@ export default function TrackOrderPage() {
       }
     };
 
-    const getCachedOrder = (searchPhone: string): BackendOrder | null => {
+    const getCachedOrder = (searchDigits: string, rawInput?: string): BackendOrder | null => {
       try {
         const rawSnapshot = localStorage.getItem('thatrico_last_order_snapshot');
         if (!rawSnapshot) return null;
 
         const snapshot = JSON.parse(rawSnapshot) as CachedOrderSnapshot;
         const cachedPhone = String(snapshot.phone || '').replace(/\D/g, '');
+        const cachedCode = String(snapshot.orderCode || '').replace(/\D/g, '');
 
-        if (!cachedPhone || cachedPhone !== searchPhone) {
+        if (rawInput && /^\d{5}$/.test(String(rawInput).replace(/\D/g, ''))) {
+          if (cachedCode && cachedCode === searchDigits) {
+            return {
+              ...snapshot,
+              phone: cachedPhone,
+              products: JSON.stringify(snapshot.products || [])
+            };
+          }
+
           return null;
         }
+
+        if (!cachedPhone || cachedPhone !== searchDigits) return null;
 
         return {
           ...snapshot,
@@ -195,7 +222,7 @@ export default function TrackOrderPage() {
             </div>
             <h1 className="text-3xl font-black uppercase tracking-tight md:text-5xl">Kiểm tra đơn hàng</h1>
             <p className="mt-4 max-w-2xl text-sm font-medium text-stone-300">
-              Nhập số điện thoại đặt hàng để xem lại thông tin đơn hàng. Đây là trang chỉ xem, không thể chỉnh sửa.
+              Nhập số điện thoại hoặc mã 5 chữ số đặt hàng để xem lại thông tin đơn hàng. Đây là trang chỉ xem, không thể chỉnh sửa.
             </p>
           </div>
 
