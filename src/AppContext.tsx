@@ -30,8 +30,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Load from localStorage
-    const savedProducts = localStorage.getItem('thatrico_products_v2');
+    // Load from server first, fallback to localStorage
+    const loadProducts = async () => {
+      try {
+        const res = await fetch('/api/products');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setProducts(data as Product[]);
+            localStorage.setItem('thatrico_products_v2', JSON.stringify(data));
+            return;
+          }
+        }
+      } catch (e) {
+        // ignore and fallback to localStorage
+      }
+
+      const savedProducts = localStorage.getItem('thatrico_products_v2');
     const savedOrders = localStorage.getItem('thatrico_orders_v2');
     const savedSettings = localStorage.getItem('thatrico_settings_v2');
     const savedUser = localStorage.getItem('thatrico_user_v2');
@@ -51,6 +66,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateProducts = (newProducts: Product[]) => {
     setProducts(newProducts);
     localStorage.setItem('thatrico_products_v2', JSON.stringify(newProducts));
+
+    // Try to sync to backend (replace entire product list)
+    (async () => {
+      try {
+        await fetch('/api/products/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newProducts)
+        });
+      } catch (e) {
+        // ignore sync errors — app will continue to use local copy
+        console.error('Failed to sync products to server', e);
+      }
+    })();
   };
 
   const updateOrders = (newOrders: Order[]) => {

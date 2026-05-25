@@ -51,6 +51,25 @@ const orderSchemaReady = (async () => {
     );
   `);
 
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS products (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      category TEXT,
+      categorySlug TEXT,
+      price REAL NOT NULL DEFAULT 0,
+      image TEXT,
+      thumbnails TEXT,
+      description TEXT,
+      specs TEXT,
+      benefits TEXT,
+      usage TEXT,
+      stockStatus TEXT,
+      rating REAL DEFAULT 5,
+      reviewsCount INTEGER DEFAULT 0
+    );
+  `);
+
   const columns = db.prepare(`PRAGMA table_info(orders)`).all() as Array<{ name: string }>;
   const hasOrderCode = columns.some((column) => column.name === orderCodeColumn);
 

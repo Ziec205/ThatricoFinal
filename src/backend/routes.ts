@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { OrderController } from './controllers/OrderController';
+import { ProductController } from './controllers/ProductController';
 import { FileUploadController } from './controllers/FileUploadController';
 import { uploadMiddleware } from './middleware/uploadMiddleware';
 
@@ -17,5 +18,9 @@ router.delete('/orders/:id', OrderController.deleteOrder);
 
 // File upload
 router.post('/upload', uploadMiddleware.single('image'), FileUploadController.uploadImage);
+
+// Products
+router.get('/products', ProductController.getAllProducts);
+router.post('/products/sync', ProductController.syncProducts);
 
 export default router;
