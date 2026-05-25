@@ -59,6 +59,20 @@ export class OrderController {
   static async getAllOrders(req: Request, res: Response) {
     try {
       const orders = await OrderModel.getAllOrders();
+
+      // Ensure every order has an orderCode. Backfill if missing so admin shows 5-digit codes.
+      for (const o of orders) {
+        if (!o.orderCode || String(o.orderCode).trim() === '') {
+          try {
+            const newCode = await OrderModel.createUniqueOrderCode();
+            await OrderModel.updateOrder(Number(o.id), { orderCode: newCode });
+            o.orderCode = newCode;
+          } catch (e) {
+            console.error('Failed to backfill orderCode for order', o.id, e);
+          }
+        }
+      }
+
       res.json(orders);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch orders' });
@@ -68,6 +82,19 @@ export class OrderController {
   static async getPendingOrders(req: Request, res: Response) {
     try {
       const orders = await OrderModel.getPendingOrders();
+
+      for (const o of orders) {
+        if (!o.orderCode || String(o.orderCode).trim() === '') {
+          try {
+            const newCode = await OrderModel.createUniqueOrderCode();
+            await OrderModel.updateOrder(Number(o.id), { orderCode: newCode });
+            o.orderCode = newCode;
+          } catch (e) {
+            console.error('Failed to backfill orderCode for order', o.id, e);
+          }
+        }
+      }
+
       res.json(orders);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch pending orders' });
