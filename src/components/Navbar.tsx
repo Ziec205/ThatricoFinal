@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Search, Menu, Phone, User, Leaf, LayoutDashboard } from 'lucide-react';
+import { ShoppingCart, Search, Menu, Phone, User, Leaf, LayoutDashboard, RotateCw } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { useCart } from '../CartContext';
 import { useAppContext } from '../AppContext';
 import { useState } from 'react';
@@ -7,8 +8,25 @@ import { motion, AnimatePresence } from 'motion/react';
 
 export default function Navbar() {
   const { totalItems } = useCart();
-  const { settings, isAdmin, user, logout } = useAppContext();
+  const { settings, isAdmin, user, logout, updateProducts } = useAppContext();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const refreshProducts = async () => {
+    try {
+      const res = await fetch('/api/products');
+      if (!res.ok) throw new Error('Fetch failed');
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        updateProducts(data as any);
+        toast.success('Đã cập nhật danh sách sản phẩm');
+        return;
+      }
+      throw new Error('Invalid data');
+    } catch (e) {
+      console.error('Refresh products failed', e);
+      toast.error('Không thể cập nhật sản phẩm. Vui lòng thử lại sau.');
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-outline">
@@ -100,6 +118,11 @@ export default function Navbar() {
               <li><Link to="/track-order" onClick={() => setIsMenuOpen(false)}>Tra cứu đơn</Link></li>
               <li><Link to="/about" onClick={() => setIsMenuOpen(false)}>Giới thiệu</Link></li>
               <li><Link to="/news" onClick={() => setIsMenuOpen(false)}>Tin tức</Link></li>
+              <li>
+                <button onClick={() => { setIsMenuOpen(false); refreshProducts(); }} className="w-full text-left flex items-center gap-2 py-2 px-3 rounded-md bg-stone-50 hover:bg-stone-100">
+                  <RotateCw size={16} /> Cập nhật sản phẩm
+                </button>
+              </li>
             </ul>
           </motion.div>
         )}
