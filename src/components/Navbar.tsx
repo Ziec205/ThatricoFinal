@@ -16,12 +16,14 @@ export default function Navbar() {
       const res = await fetch('/api/products');
       if (!res.ok) throw new Error('Fetch failed');
       const data = await res.json();
-      if (Array.isArray(data)) {
-        updateProducts(data as any);
-        toast.success('Đã cập nhật danh sách sản phẩm');
+      if (!Array.isArray(data) || data.length === 0) {
+        toast.error('Server không trả về sản phẩm. Bỏ qua cập nhật để tránh xóa dữ liệu cục bộ.');
         return;
       }
-      throw new Error('Invalid data');
+
+      updateProducts(data as any, true);
+      toast.success('Đã cập nhật danh sách sản phẩm');
+      return;
     } catch (e) {
       console.error('Refresh products failed', e);
       toast.error('Không thể cập nhật sản phẩm. Vui lòng thử lại sau.');

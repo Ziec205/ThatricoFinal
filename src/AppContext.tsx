@@ -12,6 +12,8 @@ interface AppContextType {
   logout: () => void;
   register: (userData: Omit<User, 'id'>) => void;
   updateProducts: (products: Product[]) => void;
+  // optional flag: when true, don't sync the provided products back to server
+  updateProducts: (products: Product[], skipSync?: boolean) => void;
   updateOrders: (orders: Order[]) => void;
   updateSettings: (settings: AppSettings) => void;
   addOrder: (order: Order) => void;
@@ -68,9 +70,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     loadProducts();
   }, []);
 
-  const updateProducts = (newProducts: Product[]) => {
+  const updateProducts = (newProducts: Product[], skipSync = false) => {
     setProducts(newProducts);
     localStorage.setItem('thatrico_products_v2', JSON.stringify(newProducts));
+
+    if (skipSync) return;
 
     // Try to sync to backend (replace entire product list)
     (async () => {
