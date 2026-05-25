@@ -42,6 +42,7 @@ export default function Navbar() {
         <ul className="hidden items-center gap-10 text-xs font-bold uppercase tracking-widest text-text-muted md:flex">
           <li><Link to="/" className="hover:text-primary transition-colors">Trang chủ</Link></li>
           <li><Link to="/products" className="hover:text-primary transition-colors">Sản phẩm</Link></li>
+          <li><Link to="/track-order" className="hover:text-primary transition-colors">Tra cứu đơn</Link></li>
           <li><Link to="/about" className="hover:text-primary transition-colors">Giới thiệu</Link></li>
           <li><Link to="/news" className="hover:text-primary transition-colors">Tin tức</Link></li>
         </ul>
@@ -96,6 +97,7 @@ export default function Navbar() {
             <ul className="flex flex-col gap-4 text-gray-700">
               <li><Link to="/" onClick={() => setIsMenuOpen(false)}>Trang chủ</Link></li>
               <li><Link to="/products" onClick={() => setIsMenuOpen(false)}>Sản phẩm</Link></li>
+              <li><Link to="/track-order" onClick={() => setIsMenuOpen(false)}>Tra cứu đơn</Link></li>
               <li><Link to="/about" onClick={() => setIsMenuOpen(false)}>Giới thiệu</Link></li>
               <li><Link to="/news" onClick={() => setIsMenuOpen(false)}>Tin tức</Link></li>
             </ul>

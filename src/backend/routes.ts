@@ -9,6 +9,7 @@ router.post('/orders', OrderController.createOrder);
 router.get('/orders', OrderController.getAllOrders);
 router.get('/orders/pending', OrderController.getPendingOrders);
 router.get('/orders/:id', OrderController.getOrder);
+router.get('/orders/phone/:phone', OrderController.lookupOrderByPhone);
 router.post('/orders/export-invoice', OrderController.exportAndSendInvoice);
 router.post('/orders/sync-sheets', OrderController.syncToSheets);
 router.put('/orders/:id', OrderController.updateOrder);

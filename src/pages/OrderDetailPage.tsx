@@ -52,6 +52,15 @@ export default function OrderDetailPage() {
     }
   };
 
+  const productToneClasses = [
+    'bg-emerald-50 border-emerald-200 text-emerald-800',
+    'bg-amber-50 border-amber-200 text-amber-800',
+    'bg-sky-50 border-sky-200 text-sky-800',
+    'bg-rose-50 border-rose-200 text-rose-800',
+    'bg-violet-50 border-violet-200 text-violet-800',
+    'bg-orange-50 border-orange-200 text-orange-800'
+  ];
+
   useEffect(() => {
     const fetchOrder = async () => {
       try {
@@ -185,24 +194,21 @@ export default function OrderDetailPage() {
               <h3 className="text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-6 flex items-center gap-2">
                 <ShoppingBag size={14} className="text-primary" /> Danh sách sản phẩm
               </h3>
-              <div className="space-y-4">
-                {orderProducts.map((item, idx: number) => (
-                  <div key={idx} className="flex items-center justify-between p-5 rounded-2xl border border-stone-100 hover:border-primary/20 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-xl bg-stone-50 flex items-center justify-center font-black text-stone-400">
-                        {idx + 1}
+              <div className="space-y-3">
+                {orderProducts.map((item, idx: number) => {
+                  const toneClass = productToneClasses[idx % productToneClasses.length];
+                  return (
+                    <div key={idx} className={`flex items-center justify-between gap-4 rounded-2xl border p-5 transition-colors ${toneClass}`}>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-black truncate">{item.name} x{item.quantity}</p>
                       </div>
-                      <div>
-                        <p className="text-sm font-black text-text-main truncate max-w-[180px] md:max-w-sm">{item.name}</p>
-                        <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Số lượng: {item.quantity}</p>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-black">{((item.price || 0) * (item.quantity || 1)).toLocaleString()}đ</p>
+                        <p className="text-[10px] font-bold uppercase opacity-70">Đơn giá: {(item.price || 0).toLocaleString()}đ</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-black text-primary">{(item.price * item.quantity).toLocaleString()}đ</p>
-                      <p className="text-[10px] font-bold text-stone-400 uppercase">Đơn giá: {item.price.toLocaleString()}đ</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
 

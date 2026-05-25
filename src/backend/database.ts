@@ -13,24 +13,34 @@ let client: {
   raw?: Database.Database;
 };
 
-if (process.env.DATABASE_URL) {
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-  });
+const orderSchemaReady = (async () => {
+  const orderTableName = 'orders';
+  const orderCodeColumn = 'orderCode';
 
-  client = {
-    query: (text: string, params?: any[]) => pool.query(text, params) as any,
-    pool
-  };
-} else {
-  // Fallback to sqlite for local development when DATABASE_URL is not provided
+  if (process.env.DATABASE_URL) {
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
+    });
+
+    await pool.query(`ALTER TABLE ${orderTableName} ADD COLUMN IF NOT EXISTS ${orderCodeColumn} TEXT`);
+    await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS orders_order_code_unique ON ${orderTableName} (${orderCodeColumn})`);
+
+    client = {
+      query: (text: string, params?: any[]) => pool.query(text, params) as any,
+      pool
+    };
+
+    return;
+  }
+
   const dbPath = path.resolve(process.cwd(), 'database.sqlite');
   const db = new Database(dbPath);
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS orders (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      orderCode TEXT,
       customerName TEXT NOT NULL,
       phone TEXT NOT NULL,
       address TEXT NOT NULL,
@@ -41,7 +51,15 @@ if (process.env.DATABASE_URL) {
     );
   `);
 
-  // Provide a minimal wrapper with `query` API used by models
+  const columns = db.prepare(`PRAGMA table_info(orders)`).all() as Array<{ name: string }>;
+  const hasOrderCode = columns.some((column) => column.name === orderCodeColumn);
+
+  if (!hasOrderCode) {
+    db.exec(`ALTER TABLE orders ADD COLUMN orderCode TEXT`);
+  }
+
+  db.exec(`CREATE UNIQUE INDEX IF NOT EXISTS orders_order_code_unique ON orders(orderCode)`);
+
   client = {
     query: (text: string, params?: any[]) => {
       const stmt = db.prepare(text.replace(/\$\d+/g, '?'));
@@ -65,6 +83,10 @@ if (process.env.DATABASE_URL) {
     },
     raw: db
   };
-}
+})();
+
+export const ensureOrderSchemaReady = async () => {
+  await orderSchemaReady;
+};
 
 export default client;

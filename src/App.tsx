@@ -8,6 +8,7 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import SuccessPage from './pages/SuccessPage';
+import TrackOrderPage from './pages/TrackOrderPage';
 import LoginPage from './pages/LoginPage';
 import AdminDashboard from './pages/AdminDashboard';
 import OrderDetailPage from './pages/OrderDetailPage';
@@ -55,6 +56,7 @@ function AnimatedRoutes() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/success" element={<SuccessPage />} />
+          <Route path="/track-order" element={<TrackOrderPage />} />
           <Route path="/order-view/:id" element={<OrderDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />

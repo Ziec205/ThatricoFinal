@@ -7,14 +7,15 @@ export class OrderController {
   static async createOrder(req: Request, res: Response) {
     try {
       const { customerName, phone, address, products, totalPrice } = req.body;
+      const normalizedPhone = OrderModel.normalizePhone(phone);
 
-        const orderId = await OrderModel.create({
-        customerName, phone, address, 
+        const order = await OrderModel.create({
+        customerName, phone: normalizedPhone, address, 
         products: JSON.stringify(products), 
         totalPrice
       });
 
-      res.json({ success: true, orderId });
+      res.json({ success: true, orderId: order.id, orderCode: order.orderCode });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Failed to create order' });
@@ -150,6 +151,26 @@ export class OrderController {
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Failed to fetch order' });
+    }
+  }
+
+  static async lookupOrderByPhone(req: Request, res: Response) {
+    try {
+      const phone = OrderModel.normalizePhone(String(req.params.phone || ''));
+
+      if (!phone) {
+        return res.status(400).json({ error: 'Missing phone number' });
+      }
+
+      const order = await OrderModel.getLatestByPhone(phone);
+      if (!order) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+
+      res.json(order);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Failed to lookup order' });
     }
   }
 }

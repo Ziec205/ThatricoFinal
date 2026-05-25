@@ -6,6 +6,8 @@ import { CheckCircle2, ChevronRight, Truck, CreditCard, ShieldCheck } from 'luci
 import { toast } from 'react-hot-toast';
 import { VIETNAM_PROVINCES } from '../constants';
 
+const normalizePhone = (phone: string) => phone.replace(/\D/g, '');
+
 export default function CheckoutPage() {
   const { cart, totalPrice, clearCart } = useCart();
   const { addOrder, user } = useAppContext();
@@ -44,18 +46,47 @@ export default function CheckoutPage() {
         },
         body: JSON.stringify({
           customerName: formData.customerName,
-          phone: formData.phone,
+          phone: normalizePhone(formData.phone),
           address: `${formData.address}, ${formData.city}`,
           products: cart,
           totalPrice
         })
       });
 
-      if (!response.ok) throw new Error('Failed to create order');
+      const data = await response.json();
+
+      if (!response.ok || !data.success) throw new Error(data.error || 'Failed to create order');
+
+      if (data.orderCode) {
+        localStorage.setItem('thatrico_last_order_code', data.orderCode);
+        localStorage.setItem('thatrico_last_order_phone', normalizePhone(formData.phone));
+        addOrder({
+          id: data.orderCode,
+          customerName: formData.customerName,
+          phone: normalizePhone(formData.phone),
+          address: `${formData.address}, ${formData.city}`,
+          items: cart,
+          total: totalPrice,
+          status: 'pending',
+          createdAt: new Date().toISOString()
+        });
+        localStorage.setItem(
+          'thatrico_last_order_snapshot',
+          JSON.stringify({
+            orderCode: data.orderCode,
+            phone: normalizePhone(formData.phone),
+            customerName: formData.customerName,
+            address: `${formData.address}, ${formData.city}`,
+            products: cart,
+            totalPrice,
+            status: 'pending'
+          })
+        );
+      }
 
       clearCart();
       setIsSubmitting(false);
-      navigate('/success');
+      navigate('/success', { state: { orderCode: data.orderCode, phone: normalizePhone(formData.phone) } });
     } catch (error) {
       console.error(error);
       setIsSubmitting(false);
