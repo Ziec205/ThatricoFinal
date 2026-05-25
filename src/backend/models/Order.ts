@@ -18,7 +18,18 @@ export class OrderModel {
        VALUES ($1,$2,$3,$4,$5) RETURNING id`,
       [order.customerName, order.phone, order.address, order.products, order.totalPrice]
     );
-    return res.rows[0].id;
+
+    const firstRow = Array.isArray(res.rows) ? res.rows[0] : undefined;
+    if (firstRow && firstRow.id !== undefined && firstRow.id !== null) {
+      return firstRow.id;
+    }
+
+    const lastInsertRowid = (res as any).lastInsertRowid;
+    if (lastInsertRowid !== undefined && lastInsertRowid !== null) {
+      return lastInsertRowid;
+    }
+
+    throw new Error('Failed to create order');
   }
 
   static async getPendingOrders() {
