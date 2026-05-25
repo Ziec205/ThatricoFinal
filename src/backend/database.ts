@@ -4,6 +4,15 @@ import Database from 'better-sqlite3';
 import path from 'path';
 
 dotenv.config();
+dotenv.config();
+
+type QueryResult = { rows: any[]; lastInsertRowid?: number };
+
+let client: {
+  query: (text: string, params?: any[]) => Promise<QueryResult> | QueryResult;
+  pool?: Pool;
+  raw?: Database.Database;
+};
 
 if (process.env.DATABASE_URL) {
   const pool = new Pool({
@@ -11,8 +20,8 @@ if (process.env.DATABASE_URL) {
     ssl: { rejectUnauthorized: false }
   });
 
-  export default {
-    query: (text: string, params?: any[]) => pool.query(text, params),
+  client = {
+    query: (text: string, params?: any[]) => pool.query(text, params) as any,
     pool
   };
 } else {
@@ -34,9 +43,8 @@ if (process.env.DATABASE_URL) {
   `);
 
   // Provide a minimal wrapper with `query` API used by models
-  export default {
+  client = {
     query: (text: string, params?: any[]) => {
-      // very small adapter for sqlite prepared statements when used locally
       const stmt = db.prepare(text.replace(/\$\d+/g, '?'));
       if (text.trim().toLowerCase().startsWith('select')) {
         return { rows: stmt.all(...(params || [])) } as any;
@@ -47,3 +55,5 @@ if (process.env.DATABASE_URL) {
     raw: db
   };
 }
+
+export default client;
