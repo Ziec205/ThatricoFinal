@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Work Sans", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-surface: #fafaf9; /* Stone 50 */
+  --color-surface-container: #f5f5f4; /* Stone 100 */
+  --color-outline: #e7e5e4; /* Stone 200 */
+  
+  --color-primary: #059669; /* Emerald 600 */
+  --color-primary-hover: #047857; /* Emerald 700 */
+  --color-primary-container: #ecfdf5; /* Emerald 50 */
+  --color-on-primary-container: #065f46; /* Emerald 800 */
+  
+  --color-secondary: #ef4444; /* Red 500 */
+  --color-on-secondary: #ffffff;
+  
+  --color-text-main: #292524; /* Stone 800 */
+  --color-text-muted: #78716c; /* Stone 500 */
+}
+
+@layer base {
+  body {
+    @apply bg-surface text-text-main;
+  }
+}
+
+.prose {
+  max-width: none;
+}
+

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Parking System ERD</title>
+<style>
+* { box-sizing: border-box; margin:0; padding:0; }
+body { font-family: 'Segoe UI', sans-serif; background:#0f1117; color:#e0e0e0; }
+
+.wrapper { overflow: auto; padding: 20px; }
+.canvas  { position: relative; width: 1420px; height: 1020px; margin: 0 auto; }
+
+/* ===== ACTORS ===== */
+.actor { position:absolute; display:flex; flex-direction:column; align-items:center; gap:6px; z-index:10; }
+.actor-icon { width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;border:2.5px solid; }
+.actor-label { font-size:11px;font-weight:700;text-align:center;max-width:95px;line-height:1.4; }
+
+.a-admin .actor-icon  { background:#1a1a3e;border-color:#7c6fef; }
+.a-admin .actor-label { color:#7c6fef; }
+.a-manager .actor-icon  { background:#1a2e1a;border-color:#4caf50; }
+.a-manager .actor-label { color:#4caf50; }
+.a-staff .actor-icon  { background:#0d2040;border-color:#2196f3; }
+.a-staff .actor-label { color:#64b5f6; }
+.a-driver .actor-icon  { background:#3e2200;border-color:#ff9800; }
+.a-driver .actor-label { color:#ffb74d; }
+
+/* ===== TABLES ===== */
+.tbl { position:absolute; border-radius:8px; border:1.5px solid; min-width:158px; z-index:5; overflow:hidden; font-size:11px; background:#161b22; }
+.tbl-head { padding:7px 10px; font-weight:700; font-size:12px; letter-spacing:.5px; text-align:center; }
+.tbl-body { padding:5px 8px 7px; }
+.row { display:flex; align-items:center; gap:5px; padding:2.5px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+.row:last-child { border:none; }
+.badge { font-size:9px;padding:1px 4px;border-radius:3px;font-weight:800;min-width:22px;text-align:center;flex-shrink:0; }
+.pk  { background:#c7a800;color:#000; }
+.fk  { background:#1565c0;color:#fff; }
+.sp  { width:22px;flex-shrink:0; }
+.fn  { color:#ccc;flex:1; }
+.ft  { color:#555;font-size:9.5px;margin-left:auto;white-space:nowrap; }
+
+/* color themes */
+.c-facility { border-color:#4caf50; } .c-facility .tbl-head { background:#1b3a1b;color:#81c784; }
+.c-vtype    { border-color:#7c6fef; } .c-vtype    .tbl-head { background:#1e1a40;color:#b39ddb; }
+.c-floor    { border-color:#66bb6a; } .c-floor    .tbl-head { background:#1b3a1b;color:#a5d6a7; }
+.c-pricing  { border-color:#9c77ff; } .c-pricing  .tbl-head { background:#1e1a40;color:#ce93d8; }
+.c-slot     { border-color:#2196f3; } .c-slot     .tbl-head { background:#0d2a40;color:#64b5f6; }
+.c-vehicle  { border-color:#ff9800; } .c-vehicle  .tbl-head { background:#3e2200;color:#ffb74d; }
+.c-session  { border-color:#ef5350; } .c-session  .tbl-head { background:#3e1010;color:#ef9a9a; }
+.c-payment  { border-color:#26c6da; } .c-payment  .tbl-head { background:#0d2f33;color:#80deea; }
+.c-incident { border-color:#ff7043; } .c-incident .tbl-head { background:#3e1a0d;color:#ffab91; }
+
+svg.lines { position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2; }
+
+/* legend */
+.legend { position:absolute;bottom:12px;left:10px;display:flex;gap:16px;flex-wrap:wrap;font-size:10px;color:#777;align-items:center; }
+.ld { display:flex;align-items:center;gap:5px; }
+.dot { width:10px;height:10px;border-radius:50%; }
+
+/* title */
+.title { position:absolute;top:10px;left:50%;transform:translateX(-50%);font-size:18px;font-weight:700;color:#e0e0e0;white-space:nowrap; }
+.subtitle { position:absolute;top:34px;left:50%;transform:translateX(-50%);font-size:11px;color:#666;white-space:nowrap; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+<div class="canvas" id="cv">
+
+<svg class="lines" id="svgL"></svg>
+
+<div class="title">🅿 Parking System — ERD + Actors</div>
+<div class="subtitle">Database schema with role-based actor interaction</div>
+
+<!-- ACTORS -->
+<div class="actor a-admin"   id="a_admin"   style="left:18px;top:60px">
+  <div class="actor-icon">🛡️</div>
+  <div class="actor-label">System<br>Administrator</div>
+</div>
+<div class="actor a-manager" id="a_manager" style="left:18px;top:240px">
+  <div class="actor-icon">🏢</div>
+  <div class="actor-label">Parking Facility<br>Manager</div>
+</div>
+<div class="actor a-staff"   id="a_staff"   style="left:18px;top:540px">
+  <div class="actor-icon">👷</div>
+  <div class="actor-label">Parking<br>Staff</div>
+</div>
+<div class="actor a-driver"  id="a_driver"  style="right:18px;top:440px">
+  <div class="actor-icon">🚗</div>
+  <div class="actor-label">Parking User<br>/ Driver</div>
+</div>
+
+<!-- ===== TABLES ===== -->
+
+<!-- ParkingFacility  left:155 top:70 -->
+<div class="tbl c-facility" id="t_facility" style="left:155px;top:70px">
+  <div class="tbl-head">ParkingFacility</div>
+  <div class="tbl-body">
+    <div class="row"><span class="badge pk">PK</span><span class="fn">facility_id</span><span class="ft">INT</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">name</span><span class="ft">NVARCHAR(100)</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">address</span><span class="ft">NVARCHAR(255)</span></div>
+  </div>
+</div>
+
+<!-- VehicleType  left:155 top:260 -->
+<div class="tbl c-vtype" id="t_vtype" style="left:155px;top:260px">
+  <div class="tbl-head">VehicleType</div>
+  <div class="tbl-body">
+    <div class="row"><span class="badge pk">PK</span><span class="fn">vehicle_type_id</span><span class="ft">INT</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">name</span><span class="ft">NVARCHAR(50)</span></div>
+  </div>
+</div>
+
+<!-- ParkingFloor  left:430 top:70 -->
+<div class="tbl c-floor" id="t_floor" style="left:430px;top:70px">
+  <div class="tbl-head">ParkingFloor</div>
+  <div class="tbl-body">
+    <div class="row"><span class="badge pk">PK</span><span class="fn">floor_id</span><span class="ft">INT</span></div>
+    <div class="row"><span class="badge fk">FK</span><span class="fn">facility_id</span><span class="ft">INT</span></div>
+    <div class="row"><span class="badge fk">FK</span><span class="fn">allowed_vehicle_type</span><span class="ft">INT</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">floor_name</span><span class="ft">NVARCHAR(50)</span></div>
+  </div>
+</div>
+
+<!-- PricingPolicy  left:430 top:280 -->
+<div class="tbl c-pricing" id="t_pricing" style="left:430px;top:280px">
+  <div class="tbl-head">PricingPolicy</div>
+  <div class="tbl-body">
+    <div class="row"><span class="badge pk">PK</span><span class="fn">pricing_id</span><span class="ft">INT</span></div>
+    <div class="row"><span class="badge fk">FK</span><span class="fn">vehicle_type_id</span><span class="ft">INT</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">hourly_rate</span><span class="ft">DECIMAL</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">lost_ticket_fee</span><span class="ft">DECIMAL</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">overtime_fee</span><span class="ft">DECIMAL</span></div>
+  </div>
+</div>
+
+<!-- ParkingSlot  left:710 top:70 -->
+<div class="tbl c-slot" id="t_slot" style="left:710px;top:70px">
+  <div class="tbl-head">ParkingSlot</div>
+  <div class="tbl-body">
+    <div class="row"><span class="badge pk">PK</span><span class="fn">slot_id</span><span class="ft">INT</span></div>
+    <div class="row"><span class="badge fk">FK</span><span class="fn">floor_id</span><span class="ft">INT</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">slot_code</span><span class="ft">NVARCHAR(30)</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">status</span><span class="ft">ENUM</span></div>
+  </div>
+</div>
+
+<!-- Vehicle  left:710 top:280 -->
+<div class="tbl c-vehicle" id="t_vehicle" style="left:710px;top:280px">
+  <div class="tbl-head">Vehicle</div>
+  <div class="tbl-body">
+    <div class="row"><span class="badge pk">PK</span><span class="fn">vehicle_id</span><span class="ft">INT</span></div>
+    <div class="row"><span class="badge fk">FK</span><span class="fn">vehicle_type_id</span><span class="ft">INT</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">plate_number</span><span class="ft">NVARCHAR(20) UQ</span></div>
+  </div>
+</div>
+
+<!-- ParkingSession  left:970 top:170 -->
+<div class="tbl c-session" id="t_session" style="left:970px;top:170px">
+  <div class="tbl-head">ParkingSession</div>
+  <div class="tbl-body">
+    <div class="row"><span class="badge pk">PK</span><span class="fn">session_id</span><span class="ft">INT</span></div>
+    <div class="row"><span class="badge fk">FK</span><span class="fn">vehicle_id</span><span class="ft">INT</span></div>
+    <div class="row"><span class="badge fk">FK</span><span class="fn">slot_id</span><span class="ft">INT</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">entry_time</span><span class="ft">DATETIME</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">exit_time</span><span class="ft">DATETIME</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">gate_in</span><span class="ft">NVARCHAR</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">gate_out</span><span class="ft">NVARCHAR</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">total_fee</span><span class="ft">DECIMAL</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">status</span><span class="ft">ENUM</span></div>
+  </div>
+</div>
+
+<!-- Payment  left:1210 top:70 -->
+<div class="tbl c-payment" id="t_payment" style="left:1210px;top:70px">
+  <div class="tbl-head">Payment</div>
+  <div class="tbl-body">
+    <div class="row"><span class="badge pk">PK</span><span class="fn">payment_id</span><span class="ft">INT</span></div>
+    <div class="row"><span class="badge fk">FK</span><span class="fn">session_id</span><span class="ft">INT</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">amount</span><span class="ft">DECIMAL</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">payment_method</span><span class="ft">ENUM</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">paid_at</span><span class="ft">DATETIME</span></div>
+  </div>
+</div>
+
+<!-- Incident  left:1210 top:340 -->
+<div class="tbl c-incident" id="t_incident" style="left:1210px;top:340px">
+  <div class="tbl-head">Incident</div>
+  <div class="tbl-body">
+    <div class="row"><span class="badge pk">PK</span><span class="fn">incident_id</span><span class="ft">INT</span></div>
+    <div class="row"><span class="badge fk">FK</span><span class="fn">session_id</span><span class="ft">INT</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">incident_type</span><span class="ft">ENUM</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">description</span><span class="ft">NVARCHAR</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">fine_amount</span><span class="ft">DECIMAL</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">resolved_by</span><span class="ft">NVARCHAR</span></div>
+    <div class="row"><span class="sp"></span><span class="fn">created_at</span><span class="ft">DATETIME</span></div>
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="ld"><div class="dot" style="background:#7c6fef"></div>Admin</div>
+  <div class="ld"><div class="dot" style="background:#4caf50"></div>Facility Manager</div>
+  <div class="ld"><div class="dot" style="background:#2196f3"></div>Staff</div>
+  <div class="ld"><div class="dot" style="background:#ff9800"></div>Driver</div>
+  <div class="ld" style="margin-left:16px">
+    <svg width="32" height="10"><line x1="0" y1="5" x2="32" y2="5" stroke="#aaa" stroke-width="1.5"/>
+    <circle cx="3" cy="5" r="3" fill="none" stroke="#aaa" stroke-width="1.5"/>
+    <polygon points="28,2 32,5 28,8" fill="#aaa"/></svg>
+    FK Relation (1 → N)
+  </div>
+  <div class="ld">
+    <svg width="32" height="10"><line x1="0" y1="5" x2="32" y2="5" stroke="#aaa" stroke-width="1.5" stroke-dasharray="5,3"/>
+    <polygon points="28,2 32,5 28,8" fill="#aaa"/></svg>
+    Actor Access
+  </div>
+</div>
+
+</div><!-- canvas -->
+</div><!-- wrapper -->
+
+<script>
+window.addEventListener('load', () => {
+  const cv  = document.getElementById('cv');
+  const svg = document.getElementById('svgL');
+
+  // Arrow marker defs
+  const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+  ['grn','pur','blu','ora','red','cyn','dor','adm','mgr','stf','drv'].forEach(id => {
+    const colors = {grn:'#4caf50',pur:'#7c6fef',blu:'#2196f3',ora:'#ff9800',
+                    red:'#ef5350',cyn:'#26c6da',dor:'#ff7043',
+                    adm:'#7c6fef',mgr:'#4caf50',stf:'#2196f3',drv:'#ff9800'};
+    const m = document.createElementNS('http://www.w3.org/2000/svg','marker');
+    m.setAttribute('id','arr_'+id);
+    m.setAttribute('markerWidth','7');m.setAttribute('markerHeight','7');
+    m.setAttribute('refX','6');m.setAttribute('refY','3.5');m.setAttribute('orient','auto');
+    const p = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+    p.setAttribute('points','0 0,7 3.5,0 7');p.setAttribute('fill',colors[id]);p.setAttribute('opacity','0.7');
+    m.appendChild(p);defs.appendChild(m);
+  });
+  svg.appendChild(defs);
+
+  function rect(id) {
+    const cr = cv.getBoundingClientRect();
+    const er = document.getElementById(id).getBoundingClientRect();
+    return {
+      l: er.left-cr.left, r: er.right-cr.left,
+      t: er.top-cr.top,   b: er.bottom-cr.top,
+      cx:(er.left+er.right)/2-cr.left, cy:(er.top+er.bottom)/2-cr.top
+    };
+  }
+
+  function fk(fromId, toId, colorId) {
+    const f=rect(fromId), t=rect(toId);
+    // choose sides
+    let x1,x2,mx;
+    if(f.r < t.l){ x1=f.r; x2=t.l; } else if(f.l>t.r){ x1=f.l; x2=t.r; } else { x1=f.r; x2=t.l; }
+    const y1=f.cy, y2=t.cy;
+    mx=(x1+x2)/2;
+    const c=`#arr_${colorId}`;
+
+    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx',x1);circle.setAttribute('cy',y1);circle.setAttribute('r',3.5);
+    circle.setAttribute('fill','none');circle.setAttribute('stroke',getColor(colorId));circle.setAttribute('stroke-width','1.5');
+    svg.appendChild(circle);
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+    path.setAttribute('fill','none');path.setAttribute('stroke',getColor(colorId)+'99');
+    path.setAttribute('stroke-width','1.8');path.setAttribute('marker-end',`url(${c})`);
+    svg.appendChild(path);
+  }
+
+  function actorLine(actorId, tableId, colorId) {
+    const a=rect(actorId), t=rect(tableId);
+    let x1,x2;
+    if(a.r<t.l){ x1=a.r; x2=t.l; } else { x1=a.l; x2=t.r; }
+    const y1=a.cy, y2=t.cy;
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',x1);line.setAttribute('y1',y1);
+    line.setAttribute('x2',x2);line.setAttribute('y2',y2);
+    line.setAttribute('stroke',getColor(colorId)+'77');line.setAttribute('stroke-width','1.5');
+    line.setAttribute('stroke-dasharray','6,3');
+    line.setAttribute('marker-end',`url(#arr_${colorId})`);
+    svg.appendChild(line);
+  }
+
+  const colorMap={grn:'#4caf50',pur:'#7c6fef',blu:'#2196f3',ora:'#ff9800',
+                  red:'#ef5350',cyn:'#26c6da',dor:'#ff7043',
+                  adm:'#7c6fef',mgr:'#4caf50',stf:'#2196f3',drv:'#ff9800'};
+  function getColor(id){ return colorMap[id]||'#888'; }
+
+  // FK Relations
+  fk('t_facility','t_floor','grn');
+  fk('t_vtype','t_floor','pur');
+  fk('t_vtype','t_pricing','pur');
+  fk('t_vtype','t_vehicle','pur');
+  fk('t_floor','t_slot','grn');
+  fk('t_slot','t_session','blu');
+  fk('t_vehicle','t_session','ora');
+  fk('t_session','t_payment','cyn');
+  fk('t_session','t_incident','dor');
+
+  // Actor -> Table (dashed)
+  actorLine('a_admin','t_vtype','adm');
+  actorLine('a_admin','t_facility','adm');
+  actorLine('a_manager','t_facility','mgr');
+  actorLine('a_manager','t_floor','mgr');
+  actorLine('a_manager','t_pricing','mgr');
+  actorLine('a_staff','t_slot','stf');
+  actorLine('a_staff','t_session','stf');
+  actorLine('a_staff','t_incident','stf');
+  actorLine('a_driver','t_vehicle','drv');
+  actorLine('a_driver','t_session','drv');
+  actorLine('a_driver','t_payment','drv');
+});
+</script>
+</body>
+</html>

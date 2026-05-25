@@ -1,0 +1,8 @@
+{
+  "name": "Thatrico - Agricultural Solutions",
+  "description": "A modern e-commerce platform for high-quality fertilizers and agricultural products.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
