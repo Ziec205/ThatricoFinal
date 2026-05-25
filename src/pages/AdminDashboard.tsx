@@ -533,17 +533,17 @@ export default function AdminDashboard() {
                     <p className="text-[10px] font-black uppercase tracking-widest text-stone-400">Chưa có đơn hàng chờ xử lý nào trong DB</p>
                   </div>
                 ) : (
-                  <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-stone-100">
-                    <table className="w-full table-fixed text-left border-collapse">
+                  <div className="bg-white rounded-3xl overflow-x-auto overflow-y-hidden shadow-sm border border-stone-100">
+                    <table className="min-w-[1100px] w-full table-fixed text-left border-collapse">
                       <thead>
                         <tr className="bg-stone-50 border-b border-stone-100">
                           <th className="w-[8%] px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Mã ĐH</th>
                           <th className="w-[12%] px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Ngày đặt</th>
                           <th className="w-[16%] px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Khách hàng</th>
-                          <th className="w-[22%] px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Sản phẩm</th>
+                          <th className="w-[14%] px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Sản phẩm</th>
                           <th className="w-[12%] px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Tổng tiền</th>
                           <th className="w-[10%] px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Trạng thái</th>
-                          <th className="w-[8%] px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Hành động</th>
+                          <th className="w-[18%] px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Hành động</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -572,10 +572,10 @@ export default function AdminDashboard() {
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex gap-2 justify-end">
+                              <div className="flex flex-wrap gap-2 justify-end">
                               <button 
                                 onClick={() => setEditingOrder(order)}
-                                className="flex items-center gap-1 bg-stone-100 text-stone-600 text-[10px] font-black uppercase px-3 py-2 rounded-lg hover:bg-stone-200"
+                                className="flex items-center gap-1 bg-stone-100 text-stone-600 text-[10px] font-black uppercase px-3 py-2 rounded-lg hover:bg-stone-200 shrink-0"
                                 title="Sửa đơn hàng"
                               >
                                 <Edit2 size={14} /> Sửa
@@ -592,7 +592,7 @@ export default function AdminDashboard() {
                                 id={`delete-order-${order.id}`}
                                 onClick={() => handleDeleteBackendOrder(order.id)}
                                 disabled={isDeleting === order.id}
-                                className="flex items-center gap-1 bg-red-50 text-red-500 text-[10px] font-black uppercase px-3 py-2 rounded-lg hover:bg-red-500 hover:text-white transition-all disabled:opacity-50"
+                                className="flex items-center gap-1 bg-red-50 text-red-500 text-[10px] font-black uppercase px-3 py-2 rounded-lg hover:bg-red-500 hover:text-white transition-all disabled:opacity-50 shrink-0"
                                 title="Xóa đơn hàng"
                               >
                                 <Trash2 size={14} /> Xóa
