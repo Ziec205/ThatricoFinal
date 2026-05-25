@@ -61,6 +61,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setUser(u);
       if (u.type === 'admin') setIsAdmin(true);
     }
+
+    };
+
+    // invoke loader
+    loadProducts();
   }, []);
 
   const updateProducts = (newProducts: Product[]) => {
