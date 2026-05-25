@@ -73,6 +73,19 @@ export default function AdminDashboard() {
   const [deleteConfirmModal, setDeleteConfirmModal] = useState<{ isOpen: boolean; orderId: number | null }>({ isOpen: false, orderId: null });
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
+  const getOrderStatusClass = (status?: string) => {
+    switch ((status || '').toLowerCase()) {
+      case 'completed':
+        return 'bg-green-100 text-green-700';
+      case 'cancelled':
+        return 'bg-red-100 text-red-700';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-700';
+      default:
+        return 'bg-stone-100 text-stone-600';
+    }
+  };
+
   const fetchOrderById = async (id: string | number) => {
     try {
       const res = await fetch(`/api/orders/${id}`);
@@ -429,7 +442,7 @@ export default function AdminDashboard() {
                             </td>
                             <td className="px-6 py-4 text-xs font-black text-primary">{order.totalPrice.toLocaleString()}đ</td>
                             <td className="px-6 py-4">
-                              <span className="text-[10px] font-black uppercase tracking-widest rounded-lg px-3 py-1.5 bg-yellow-100 text-yellow-700">
+                              <span className={`text-[10px] font-black uppercase tracking-widest rounded-lg px-3 py-1.5 ${getOrderStatusClass(order.status)}`}>
                                 {order.status}
                               </span>
                             </td>
