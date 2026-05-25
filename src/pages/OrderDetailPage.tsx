@@ -17,10 +17,40 @@ import {
 import { Order } from '../types';
 import { toast } from 'react-hot-toast';
 
+type BackendOrderProduct = {
+  name?: string;
+  quantity?: number;
+  price?: number;
+};
+
+type BackendOrder = {
+  id: number;
+  customerName: string;
+  phone: string;
+  address: string;
+  products?: string;
+  totalPrice?: number;
+  status?: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  createdAt?: string;
+  paymentMethod?: string;
+  shippingMethod?: string;
+};
+
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [order, setOrder] = useState<Order | null>(null);
+  const [order, setOrder] = useState<BackendOrder | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const parseProducts = (productsJson?: string) => {
+    if (!productsJson) return [] as BackendOrderProduct[];
+
+    try {
+      const parsed = JSON.parse(productsJson);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -86,6 +116,8 @@ export default function OrderDetailPage() {
       default: return status;
     }
   };
+
+  const orderProducts = parseProducts(order?.products);
 
   return (
     <div className="min-h-screen bg-stone-50 py-12 px-4 md:py-20">
@@ -154,7 +186,7 @@ export default function OrderDetailPage() {
                 <ShoppingBag size={14} className="text-primary" /> Danh sách sản phẩm
               </h3>
               <div className="space-y-4">
-                {JSON.parse(order.productsJson).map((item: any, idx: number) => (
+                {orderProducts.map((item, idx: number) => (
                   <div key={idx} className="flex items-center justify-between p-5 rounded-2xl border border-stone-100 hover:border-primary/20 transition-colors">
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-xl bg-stone-50 flex items-center justify-center font-black text-stone-400">
@@ -179,7 +211,7 @@ export default function OrderDetailPage() {
               <div>
                 <p className="text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] mb-2">Tổng giá trị đơn hàng</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-black text-primary">{order.totalPrice.toLocaleString()}</span>
+                  <span className="text-4xl font-black text-primary">{(order.totalPrice || 0).toLocaleString()}</span>
                   <span className="text-xl font-black text-stone-400">VNĐ</span>
                 </div>
               </div>

@@ -25,6 +25,23 @@ import { Html5Qrcode } from 'html5-qrcode';
 import QRCode from 'qrcode';
 import ConfirmModal from '../components/ConfirmModal';
 
+type BackendOrderProduct = {
+  name?: string;
+  quantity?: number;
+  price?: number;
+};
+
+type BackendOrder = {
+  id: number;
+  customerName: string;
+  phone: string;
+  address: string;
+  products?: string;
+  totalPrice: number;
+  status?: string;
+  createdAt?: string;
+};
+
 const InlineQRCode = ({ orderId, onClick }: { orderId: number, onClick: () => void }) => {
   const [dataUrl, setDataUrl] = React.useState<string>('');
   
@@ -84,6 +101,26 @@ export default function AdminDashboard() {
       default:
         return 'bg-stone-100 text-stone-600';
     }
+  };
+
+  const parseOrderProducts = (order: BackendOrder) => {
+    if (!order.products) return [] as BackendOrderProduct[];
+
+    try {
+      const parsed = JSON.parse(order.products);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const formatOrderProducts = (order: BackendOrder) => {
+    const products = parseOrderProducts(order);
+    if (products.length === 0) return 'Không có dữ liệu sản phẩm';
+
+    return products
+      .map((item, index) => `${index + 1}. ${item.name || 'Sản phẩm'} x${item.quantity || 1}`)
+      .join(' • ');
   };
 
   const fetchOrderById = async (id: string | number) => {
@@ -146,16 +183,16 @@ export default function AdminDashboard() {
   // Removed Google Auth effect
   
   // --- Orders Logic ---
-  const [backendOrders, setBackendOrders] = useState<any[]>([]);
+  const [backendOrders, setBackendOrders] = useState<BackendOrder[]>([]);
 
   const fetchOrders = async () => {
     try {
       const res = await fetch('/api/orders');
       const data = await res.json();
       if (Array.isArray(data)) {
-        setBackendOrders(data);
+        setBackendOrders(data as BackendOrder[]);
       }
-      return Array.isArray(data) ? data : [];
+      return Array.isArray(data) ? (data as BackendOrder[]) : [];
     } catch (e) {
       console.error(e);
       return [];
@@ -438,6 +475,7 @@ export default function AdminDashboard() {
                           <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Mã ĐH</th>
                           <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Ngày đặt</th>
                           <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Khách hàng</th>
+                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Sản phẩm</th>
                           <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Tổng tiền</th>
                           <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Trạng thái</th>
                           <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Hành động</th>
@@ -458,6 +496,11 @@ export default function AdminDashboard() {
                             <td className="px-6 py-4">
                               <p className="text-[10px] font-black uppercase tracking-widest text-text-main">{order.customerName}</p>
                               <p className="text-[10px] font-bold text-text-muted">{order.phone}</p>
+                            </td>
+                            <td className="px-6 py-4 max-w-[340px]">
+                              <p className="text-[10px] font-bold text-text-main leading-relaxed line-clamp-3">
+                                {formatOrderProducts(order)}
+                              </p>
                             </td>
                             <td className="px-6 py-4 text-xs font-black text-primary">{order.totalPrice.toLocaleString()}đ</td>
                             <td className="px-6 py-4">
@@ -855,6 +898,12 @@ export default function AdminDashboard() {
                         className="w-full bg-stone-100 border-none rounded-xl py-4 px-6 text-xs font-bold focus:ring-2 focus:ring-primary"
                         required
                       />
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-text-muted mb-2">Sản phẩm đã mua</label>
+                      <div className="rounded-xl bg-stone-50 border border-stone-200 px-4 py-4 text-xs font-bold text-text-main leading-relaxed">
+                        {formatOrderProducts(editingOrder)}
+                      </div>
                     </div>
                     <div>
                       <label className="block text-[10px] font-black uppercase tracking-widest text-text-muted mb-2">Trạng thái</label>
