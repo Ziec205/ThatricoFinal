@@ -33,6 +33,7 @@ type BackendOrderProduct = {
 
 type BackendOrder = {
   id: number;
+  orderCode?: string;
   customerName: string;
   phone: string;
   address: string;
@@ -549,7 +550,7 @@ export default function AdminDashboard() {
                       <tbody>
                         {backendOrders.map(order => (
                           <tr key={order.id} className="border-b border-stone-50 hover:bg-stone-50/50 transition-colors">
-                            <td className="px-6 py-4 text-xs font-bold font-mono">#{order.id}</td>
+                            <td className="px-6 py-4 text-xs font-bold font-mono">{order.orderCode ? order.orderCode : `#${order.id}`}</td>
                             <td className="px-6 py-4">
                               <p className="text-[10px] font-bold text-text-muted uppercase tracking-tight">
                                 {new Date(order.createdAt).toLocaleDateString('vi-VN')}
