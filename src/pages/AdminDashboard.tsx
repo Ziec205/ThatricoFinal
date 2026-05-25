@@ -103,6 +103,15 @@ export default function AdminDashboard() {
     }
   };
 
+  const productToneClasses = [
+    'bg-emerald-50 border-emerald-200 text-emerald-800',
+    'bg-amber-50 border-amber-200 text-amber-800',
+    'bg-sky-50 border-sky-200 text-sky-800',
+    'bg-rose-50 border-rose-200 text-rose-800',
+    'bg-violet-50 border-violet-200 text-violet-800',
+    'bg-orange-50 border-orange-200 text-orange-800'
+  ];
+
   const parseOrderProducts = (order: BackendOrder) => {
     if (!order.products) return [] as BackendOrderProduct[];
 
@@ -114,13 +123,69 @@ export default function AdminDashboard() {
     }
   };
 
-  const formatOrderProducts = (order: BackendOrder) => {
+  const renderOrderSummary = (order: BackendOrder) => {
     const products = parseOrderProducts(order);
-    if (products.length === 0) return 'Không có dữ liệu sản phẩm';
 
-    return products
-      .map((item, index) => `${index + 1}. ${item.name || 'Sản phẩm'} x${item.quantity || 1}`)
-      .join(' • ');
+    if (products.length === 0) {
+      return <span className="text-stone-400">Không có dữ liệu sản phẩm</span>;
+    }
+
+    const visibleProducts = products.slice(0, 2);
+    const remainingCount = products.length - visibleProducts.length;
+
+    return (
+      <div className="flex flex-col gap-2">
+        <div className="text-[10px] font-black uppercase tracking-widest text-text-muted">
+          {products.length} sản phẩm
+        </div>
+        {visibleProducts.map((item, index) => {
+          const toneClass = productToneClasses[index % productToneClasses.length];
+          return (
+            <div
+              key={`${item.name || 'product'}-${index}`}
+              className={`inline-flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-widest ${toneClass}`}
+            >
+              <span className="min-w-0 flex-1 truncate">
+                {item.name || 'Sản phẩm'} x{item.quantity || 1}
+              </span>
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-current opacity-70" />
+            </div>
+          );
+        })}
+        {remainingCount > 0 && (
+          <div className="text-[10px] font-black uppercase tracking-widest text-stone-400">
+            +{remainingCount} sản phẩm khác
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderOrderProducts = (order: BackendOrder) => {
+    const products = parseOrderProducts(order);
+
+    if (products.length === 0) {
+      return <span className="text-stone-400">Không có dữ liệu sản phẩm</span>;
+    }
+
+    return (
+      <div className="flex flex-col gap-2">
+        {products.map((item, index) => {
+          const toneClass = productToneClasses[index % productToneClasses.length];
+          return (
+            <div
+              key={`${item.name || 'product'}-${index}`}
+              className={`inline-flex items-center justify-between gap-3 rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-widest ${toneClass}`}
+            >
+              <span className="min-w-0 flex-1 truncate">
+                {item.name || 'Sản phẩm'} x{item.quantity || 1}
+              </span>
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-current opacity-70" />
+            </div>
+          );
+        })}
+      </div>
+    );
   };
 
   const fetchOrderById = async (id: string | number) => {
@@ -469,16 +534,16 @@ export default function AdminDashboard() {
                   </div>
                 ) : (
                   <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-stone-100">
-                    <table className="w-full text-left border-collapse">
+                    <table className="w-full table-fixed text-left border-collapse">
                       <thead>
                         <tr className="bg-stone-50 border-b border-stone-100">
-                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Mã ĐH</th>
-                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Ngày đặt</th>
-                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Khách hàng</th>
-                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Sản phẩm</th>
-                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Tổng tiền</th>
-                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Trạng thái</th>
-                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Hành động</th>
+                          <th className="w-[8%] px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Mã ĐH</th>
+                          <th className="w-[12%] px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Ngày đặt</th>
+                          <th className="w-[16%] px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Khách hàng</th>
+                          <th className="w-[22%] px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Sản phẩm</th>
+                          <th className="w-[12%] px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Tổng tiền</th>
+                          <th className="w-[10%] px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Trạng thái</th>
+                          <th className="w-[8%] px-6 py-4 text-[10px] font-black uppercase tracking-widest text-text-muted">Hành động</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -497,10 +562,8 @@ export default function AdminDashboard() {
                               <p className="text-[10px] font-black uppercase tracking-widest text-text-main">{order.customerName}</p>
                               <p className="text-[10px] font-bold text-text-muted">{order.phone}</p>
                             </td>
-                            <td className="px-6 py-4 max-w-[340px]">
-                              <p className="text-[10px] font-bold text-text-main leading-relaxed line-clamp-3">
-                                {formatOrderProducts(order)}
-                              </p>
+                            <td className="px-6 py-4 align-top">
+                              {renderOrderSummary(order)}
                             </td>
                             <td className="px-6 py-4 text-xs font-black text-primary">{order.totalPrice.toLocaleString()}đ</td>
                             <td className="px-6 py-4">
@@ -508,7 +571,8 @@ export default function AdminDashboard() {
                                 {order.status}
                               </span>
                             </td>
-                            <td className="px-6 py-4 flex gap-2">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex gap-2 justify-end">
                               <button 
                                 onClick={() => setEditingOrder(order)}
                                 className="flex items-center gap-1 bg-stone-100 text-stone-600 text-[10px] font-black uppercase px-3 py-2 rounded-lg hover:bg-stone-200"
@@ -533,6 +597,7 @@ export default function AdminDashboard() {
                               >
                                 <Trash2 size={14} /> Xóa
                               </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -902,7 +967,7 @@ export default function AdminDashboard() {
                     <div className="md:col-span-2">
                       <label className="block text-[10px] font-black uppercase tracking-widest text-text-muted mb-2">Sản phẩm đã mua</label>
                       <div className="rounded-xl bg-stone-50 border border-stone-200 px-4 py-4 text-xs font-bold text-text-main leading-relaxed">
-                        {formatOrderProducts(editingOrder)}
+                        {renderOrderProducts(editingOrder)}
                       </div>
                     </div>
                     <div>
