@@ -129,20 +129,11 @@ export class OrderModel {
   }
 
   static async deleteOrder(id: number) {
-    let deleteResult: any;
+    const deleteResult = await db.query(`DELETE FROM orders WHERE id = $1 RETURNING id`, [id]);
+    const affectedRows = (deleteResult as any).rowCount ?? (deleteResult as any).changes ?? deleteResult.rows?.length ?? 0;
 
-    if (process.env.DATABASE_URL) {
-      deleteResult = await db.query(`DELETE FROM orders WHERE id = $1 RETURNING id`, [id]);
-      const affectedRows = (deleteResult as any).rowCount ?? (deleteResult as any).changes ?? deleteResult.rows?.length ?? 0;
-
-      if (!affectedRows) {
-        throw new Error(`Order with id ${id} not found`);
-      }
-    } else {
-      // Local SQLite should behave like an idempotent delete so the UI does not
-      // show a false error when the row is already gone or the driver does not
-      // expose RETURNING metadata the same way as PostgreSQL.
-      deleteResult = await db.query(`DELETE FROM orders WHERE id = $1`, [id]);
+    if (!affectedRows) {
+      throw new Error(`Order with id ${id} not found`);
     }
 
     const countRes = await db.query(`SELECT COUNT(*) AS count FROM orders`);
@@ -150,13 +141,9 @@ export class OrderModel {
 
     if (remainingOrders === 0) {
       try {
-        await db.query(`ALTER SEQUENCE orders_id_seq RESTART WITH 1`);
+        await db.query(`DELETE FROM sqlite_sequence WHERE name = 'orders'`);
       } catch {
-        try {
-          await db.query(`DELETE FROM sqlite_sequence WHERE name = 'orders'`);
-        } catch {
-          // No-op: some databases do not expose a resettable sequence table.
-        }
+        // No-op when the SQLite sequence table is not available yet.
       }
     }
 

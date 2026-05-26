@@ -4,12 +4,12 @@ import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 import cors from 'cors';
 import backendRoutes from './src/backend/routes';
-import { ensureOrderSchemaReady } from './src/backend/database';
+import { ensureDatabaseReady } from './src/backend/database';
 
 dotenv.config();
 
 async function startServer() {
-  await ensureOrderSchemaReady();
+  await ensureDatabaseReady();
 
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;

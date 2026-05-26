@@ -18,7 +18,7 @@ type BackendOrder = {
   address: string;
   products?: string;
   totalPrice?: number;
-  status?: 'pending' | 'processing' | 'completed' | 'cancelled';
+  status?: 'pending' | 'processing' | 'shipped' | 'delivered' | 'completed' | 'cancelled';
   createdAt?: string;
 };
 

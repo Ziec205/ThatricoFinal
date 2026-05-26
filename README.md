@@ -1,6 +1,6 @@
 # Hệ thống quản lý bán hàng nông nghiệp (MVC2 + Express + React Vite)
 
-Đây là dự án full-stack sử dụng mô hình MVC2 ở phía backend với Node.js, Express và SQLite. Giao diện được xây dựng bằng React.js, Vite và Tailwind CSS. 
+Đây là dự án full-stack sử dụng mô hình MVC2 ở phía backend với Node.js, Express và SQLite local. Giao diện được xây dựng bằng React.js, Vite và Tailwind CSS. 
 
 ## Tính năng
 
@@ -9,6 +9,7 @@
    - Quản lý danh sách sản phẩm.
    - Quản lý đơn hàng đang chờ xử lý từ Database.
    - **Xuất hóa đơn (Invoice)**: Bấm nút xuất hóa đơn, hệ thống sẽ lấy dữ liệu đơn hàng (tên, SĐT, danh sách sản phẩm...) tạo thành mã QR Code và gửi Email cho khách.
+3. **Lưu local toàn bộ dữ liệu**: Sản phẩm và đơn hàng được lưu trong file SQLite ở máy local, nên thêm/sửa sản phẩm sẽ hiện lại ngay sau khi tải lại trang.
 
 ## Cài đặt và chạy trên Visual Studio Code
 
@@ -38,4 +39,4 @@
 ## Sửa lỗi Hệ thống
 
 - **Lỗi Fetch**: Đã thêm script bảo vệ `window.fetch` trong `index.html` để ngăn chặn các thư viện bên thứ 3 ghi đè lên hàm fetch hệ thống, giúp khắc phục lỗi "Cannot set property fetch which has only a getter".
-- **Database**: Đã sửa đường dẫn kết nối database trong các mô hình (Models) để đảm bảo hệ thống tìm thấy tệp `.sqlite` chính xác.
+- **Database**: Hệ thống hiện dùng SQLite local làm nguồn dữ liệu duy nhất và tự seed dữ liệu sản phẩm ban đầu khi DB còn trống.

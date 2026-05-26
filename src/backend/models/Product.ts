@@ -1,83 +1,67 @@
-import db from '../database';
+import db, { deserializeProductRow, serializeProductRow } from '../database';
+import type { Product } from '../../types';
 
 export interface ProductRow {
   id: string;
   name: string;
-  category?: string;
-  categorySlug?: string;
+  category: string;
+  categorySlug: string;
   price: number;
-  image?: string;
-  thumbnails?: string;
-  description?: string;
-  specs?: string;
-  benefits?: string;
-  usage?: string;
-  stockStatus?: string;
-  rating?: number;
-  reviewsCount?: number;
+  originalPrice?: number;
+  image: string;
+  thumbnails: { label: string; value: string }[] | string[];
+  description: string;
+  specs: { label: string; value: string }[];
+  benefits: string[];
+  usage: string[];
+  isHot?: boolean;
+  isNew?: boolean;
+  stockStatus: 'in-stock' | 'out-of-stock';
+  rating: number;
+  reviewsCount: number;
 }
 
 export class ProductModel {
   static async getAll() {
     const res = await db.query('SELECT * FROM products');
-    return res.rows as ProductRow[];
+    return (res.rows as any[]).map((row) => deserializeProductRow(row)) as Product[];
   }
 
   static async replaceAll(products: ProductRow[]) {
-    // For sqlite, wrap in transaction if supported
     try {
-      if ((db as any).raw && (db as any).raw.exec) {
-        const raw = (db as any).raw as any;
-        raw.exec('BEGIN TRANSACTION');
-        raw.exec('DELETE FROM products');
+      if (db.raw && typeof (db.raw as any).transaction === 'function') {
+        const raw = db.raw as any;
+        const replaceAllInTransaction = raw.transaction((items: ProductRow[]) => {
+          raw.prepare('DELETE FROM products').run();
 
-        const insert = raw.prepare(`INSERT INTO products (id, name, category, categorySlug, price, image, thumbnails, description, specs, benefits, usage, stockStatus, rating, reviewsCount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
-        for (const p of products) {
-          insert.run(
-            p.id,
-            p.name,
-            p.category || null,
-            p.categorySlug || null,
-            Number(p.price || 0),
-            p.image || null,
-            p.thumbnails || null,
-            p.description || null,
-            p.specs || null,
-            p.benefits || null,
-            p.usage || null,
-            p.stockStatus || null,
-            Number(p.rating || 5),
-            Number(p.reviewsCount || 0)
-          );
-        }
+          const insert = raw.prepare(`
+            INSERT INTO products (
+              id, name, category, categorySlug, price, originalPrice, image, thumbnails, description,
+              specs, benefits, usage, isHot, isNew, stockStatus, rating, reviewsCount
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `);
 
-        raw.exec('COMMIT');
+          for (const product of items) {
+            insert.run(...serializeProductRow(product as Product));
+          }
+        });
+
+        replaceAllInTransaction(products);
       } else {
-        // Fallback: delete then insert via queries
         await db.query('DELETE FROM products');
         for (const p of products) {
-          await db.query(`INSERT INTO products (id, name, category, categorySlug, price, image, thumbnails, description, specs, benefits, usage, stockStatus, rating, reviewsCount) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, [
-            p.id,
-            p.name,
-            p.category || null,
-            p.categorySlug || null,
-            Number(p.price || 0),
-            p.image || null,
-            p.thumbnails || null,
-            p.description || null,
-            p.specs || null,
-            p.benefits || null,
-            p.usage || null,
-            p.stockStatus || null,
-            Number(p.rating || 5),
-            Number(p.reviewsCount || 0)
-          ]);
+          await db.query(
+            `INSERT INTO products (
+              id, name, category, categorySlug, price, originalPrice, image, thumbnails, description,
+              specs, benefits, usage, isHot, isNew, stockStatus, rating, reviewsCount
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
+            serializeProductRow(p as Product)
+          );
         }
       }
 
       return await ProductModel.getAll();
     } catch (e) {
-      try { (db as any).raw.exec('ROLLBACK'); } catch {}
       throw e;
     }
   }

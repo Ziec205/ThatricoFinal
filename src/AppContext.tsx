@@ -11,8 +11,6 @@ interface AppContextType {
   login: (username: string, password: string) => boolean;
   logout: () => void;
   register: (userData: Omit<User, 'id'>) => void;
-  updateProducts: (products: Product[]) => void;
-  // optional flag: when true, don't sync the provided products back to server
   updateProducts: (products: Product[], skipSync?: boolean) => void;
   updateOrders: (orders: Order[]) => void;
   updateSettings: (settings: AppSettings) => void;
