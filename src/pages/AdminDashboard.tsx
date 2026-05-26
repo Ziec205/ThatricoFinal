@@ -397,27 +397,26 @@ export default function AdminDashboard() {
 
     setIsUploadingImage(true);
     try {
-      const imageDataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result || ''));
-        reader.onerror = () => reject(new Error('Không thể đọc file ảnh'));
-        reader.readAsDataURL(file);
+      const form = new FormData();
+      form.append('image', file);
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: form
       });
 
-      if (!imageDataUrl) {
-        toast.error('Không thể tải ảnh lên');
-        return;
-      }
+      if (!res.ok) throw new Error('Upload failed');
 
-      // Update product with an embedded image so it survives reloads.
-      if (editingProduct) {
-        setEditingProduct({
-          ...editingProduct,
-          image: imageDataUrl
-        });
+      const body = await res.json();
+      if (body && body.success && body.path) {
+        if (editingProduct) {
+          setEditingProduct({ ...editingProduct, image: body.path });
+        }
+        toast.success('Tải hình ảnh thành công!');
+      } else {
+        console.error('Upload response invalid', body);
+        toast.error('Lỗi khi tải ảnh lên');
       }
-
-      toast.success('Tải hình ảnh thành công!');
     } catch (error) {
       console.error('Upload error:', error);
       toast.error('Lỗi kết nối khi upload hình ảnh');
