@@ -170,10 +170,22 @@ export class OrderController {
   static async getOrder(req: Request, res: Response) {
     try {
       const { id } = req.params;
-        const order = await OrderModel.getById(Number(id));
+      let order;
+
+      // If id is a 5-digit code (orderCode), lookup by code. Otherwise treat as numeric id.
+      if (typeof id === 'string' && /^\d{5}$/.test(id.trim())) {
+        order = await OrderModel.getByCode(id.trim());
+      } else {
+        const numeric = Number(id);
+        if (!Number.isNaN(numeric)) {
+          order = await OrderModel.getById(numeric);
+        }
+      }
+
       if (!order) {
         return res.status(404).json({ error: 'Order not found' });
       }
+
       res.json(order);
     } catch (error) {
       console.error(error);

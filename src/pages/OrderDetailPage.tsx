@@ -25,6 +25,7 @@ type BackendOrderProduct = {
 
 type BackendOrder = {
   id: number;
+  orderCode?: string;
   customerName: string;
   phone: string;
   address: string;
@@ -144,7 +145,7 @@ export default function OrderDetailPage() {
                   <Package className="text-primary" size={24} />
                   <span className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400">Chi tiết đơn hàng staff</span>
                 </div>
-                <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2">#{order.id}</h1>
+                <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-2">#{order.orderCode ? order.orderCode : order.id}</h1>
                 <p className="text-stone-400 font-medium text-sm flex items-center gap-2">
                   <Calendar size={14} /> {new Date(order.createdAt || '').toLocaleString('vi-VN')}
                 </p>
