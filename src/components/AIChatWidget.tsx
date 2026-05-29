@@ -23,6 +23,13 @@ const QUICK_PROMPTS = [
   'Cách nhận biết cây thiếu đạm?',
 ];
 
+const apiEnv = import.meta as ImportMeta & { env?: { VITE_API_URL?: string } };
+const API_BASE_URL = (apiEnv.env?.VITE_API_URL || '').replace(/\/$/, '');
+
+function buildApiUrl(path: string) {
+  return API_BASE_URL ? `${API_BASE_URL}${path}` : path;
+}
+
 export default function AIChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
@@ -50,7 +57,7 @@ export default function AIChatWidget() {
     setIsSending(true);
 
     try {
-      const response = await fetch('/api/ai/chat', {
+      const response = await fetch(buildApiUrl('/api/ai/chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -62,7 +69,7 @@ export default function AIChatWidget() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data?.error || 'Không thể nhận phản hồi từ AI.');
+        throw new Error(data?.error || `Không thể nhận phản hồi từ AI (${response.status}).`);
       }
 
       setMessages((current) => [...current, { role: 'assistant', content: data.reply }]);
