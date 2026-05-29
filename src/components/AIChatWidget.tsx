@@ -66,22 +66,27 @@ export default function AIChatWidget() {
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data?.error || `Không thể nhận phản hồi từ AI (${response.status}).`);
+        const serverError = (data as any)?.error || `Không thể nhận phản hồi từ AI (${response.status}).`;
+        toast.error(serverError);
+        setMessages((current) => [
+          ...current,
+          { role: 'assistant', content: `Lỗi từ server AI: ${serverError}` },
+        ]);
+        setIsSending(false);
+        return;
       }
 
-      setMessages((current) => [...current, { role: 'assistant', content: data.reply }]);
-    } catch (error) {
+      setMessages((current) => [...current, { role: 'assistant', content: (data as any).reply }] );
+    } catch (error: any) {
       console.error('AI chat failed', error);
-      toast.error('Không gửi được câu hỏi cho AI. Vui lòng thử lại.');
+      const msg = error?.message || 'Không gửi được câu hỏi cho AI. Vui lòng thử lại.';
+      toast.error(msg);
       setMessages((current) => [
         ...current,
-        {
-          role: 'assistant',
-          content: 'Hiện tại mình chưa kết nối được AI. Bạn có thể thử lại sau vài giây.',
-        },
+        { role: 'assistant', content: `Lỗi khi gửi yêu cầu: ${msg}` },
       ]);
     } finally {
       setIsSending(false);

@@ -22,6 +22,7 @@ router.post('/upload', uploadMiddleware.single('image'), FileUploadController.up
 
 // AI chat
 router.post('/ai/chat', AiController.chat);
+router.get('/ai/status', AiController.status);
 
 // Products
 router.get('/products', ProductController.getAllProducts);

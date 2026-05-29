@@ -108,6 +108,24 @@ export class AiController {
       return res.status(500).json({ error: errorMessage });
     }
   }
+
+  static async status(req: Request, res: Response) {
+    try {
+      const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
+      const googleProject = GOOGLE_CLOUD_PROJECT;
+      const usingVertex = parseBoolean(process.env.GOOGLE_GENAI_USE_VERTEXAI) || (!apiKey && Boolean(googleProject));
+
+      return res.json({
+        ok: true,
+        hasApiKey: Boolean(apiKey),
+        usingVertex: Boolean(usingVertex),
+        googleProject: googleProject || null,
+      });
+    } catch (err) {
+      console.error('AI status check failed', err);
+      return res.status(500).json({ ok: false, error: 'Lỗi khi kiểm tra cấu hình AI.' });
+    }
+  }
 }
 
 export default AiController;
