@@ -15,13 +15,18 @@
 
 - Ứng dụng có sẵn một pop-up chat nhỏ ở góc phải màn hình để người dùng không chuyên có thể hỏi nhanh về cây trồng, phân bón, sâu bệnh và cách chăm sóc.
 - Chatbox dùng Gemini qua backend API `/api/ai/chat`, nên không lộ key ra frontend.
-- Khi deploy lên Render, hãy thêm biến môi trường `GEMINI_API_KEY` và nếu muốn thì đặt `GEMINI_MODEL` (mặc định là `gemini-2.0-flash`).
+- Khi deploy lên Render, bạn có 2 cách cấu hình:
+   - Cách 1: `GEMINI_API_KEY` cho Gemini API key thông thường.
+   - Cách 2: `GOOGLE_CLOUD_PROJECT` + `GOOGLE_APPLICATION_CREDENTIALS` nếu chạy Vertex AI bằng service account.
+- Nếu dùng project chỉ có thông tin như ảnh bạn gửi, thì chưa đủ để gọi API; bạn vẫn cần một trong hai cấu hình trên.
 
 Ví dụ biến môi trường cần có trên Render:
 
 ```bash
 GEMINI_API_KEY=your_key_here
 GEMINI_MODEL=gemini-2.0-flash
+GOOGLE_CLOUD_PROJECT=your-project-id
+GOOGLE_GENAI_USE_VERTEXAI=false
 ```
 
 ## Cài đặt và chạy trên Visual Studio Code

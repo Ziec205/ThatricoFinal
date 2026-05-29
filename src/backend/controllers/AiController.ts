@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { GoogleGenAI } from '@google/genai';
 
 type ChatMessage = {
   role: 'user' | 'assistant';
@@ -6,6 +7,12 @@ type ChatMessage = {
 };
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+const GOOGLE_CLOUD_PROJECT = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCP_PROJECT || '';
+const GOOGLE_CLOUD_LOCATION = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
+
+function parseBoolean(value: string | undefined) {
+  return value === 'true' || value === '1';
+}
 
 function buildSystemPrompt() {
   return [
@@ -43,55 +50,45 @@ function normalizeHistory(history: unknown): ChatMessage[] {
 export class AiController {
   static async chat(req: Request, res: Response) {
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
       const message = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
       const history = normalizeHistory(req.body?.history);
-
-      if (!apiKey) {
-        return res.status(500).json({ error: 'Thiếu GEMINI_API_KEY trong biến môi trường.' });
-      }
+      const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
+      const useVertexAI = parseBoolean(process.env.GOOGLE_GENAI_USE_VERTEXAI) || (!apiKey && Boolean(GOOGLE_CLOUD_PROJECT));
 
       if (!message) {
         return res.status(400).json({ error: 'Tin nhắn không được để trống.' });
       }
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: buildSystemPrompt() }],
-          },
-          contents: [
-            ...history.map((entry) => ({
-              role: entry.role === 'assistant' ? 'model' : 'user',
-              parts: [{ text: entry.content }],
-            })),
-            {
-              role: 'user',
-              parts: [{ text: message }],
-            },
-          ],
-          generationConfig: {
-            temperature: 0.4,
-            maxOutputTokens: 400,
-          },
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        const errorMessage = data?.error?.message || 'Gemini API không phản hồi đúng.';
-        return res.status(response.status).json({ error: errorMessage });
+      if (!apiKey && !useVertexAI) {
+        return res.status(500).json({
+          error: 'Thiếu cấu hình Gemini. Cần GEMINI_API_KEY hoặc GOOGLE_CLOUD_PROJECT + GOOGLE_APPLICATION_CREDENTIALS.',
+        });
       }
 
-      const reply = data?.candidates?.[0]?.content?.parts
-        ?.map((part: { text?: string }) => part.text || '')
-        .join('')
-        .trim();
+      const ai = apiKey
+        ? new GoogleGenAI({ apiKey })
+        : new GoogleGenAI({ vertexai: true, project: GOOGLE_CLOUD_PROJECT, location: GOOGLE_CLOUD_LOCATION });
+
+      const modelResponse = await ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: [
+          ...history.map((entry) => ({
+            role: entry.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: entry.content }],
+          })),
+          {
+            role: 'user',
+            parts: [{ text: message }],
+          },
+        ],
+        config: {
+          systemInstruction: buildSystemPrompt(),
+          temperature: 0.4,
+          maxOutputTokens: 400,
+        },
+      });
+
+      const reply = modelResponse.text?.trim();
 
       if (!reply) {
         return res.status(500).json({ error: 'Gemini không trả về nội dung phù hợp.' });
@@ -100,7 +97,15 @@ export class AiController {
       return res.json({ reply });
     } catch (error) {
       console.error('Gemini chat failed', error);
-      return res.status(500).json({ error: 'Không thể kết nối Gemini lúc này.' });
+
+      const errorMessage = error instanceof Error ? error.message : 'Không thể kết nối Gemini lúc này.';
+      if (errorMessage.includes('API key') || errorMessage.includes('permission') || errorMessage.includes('403')) {
+        return res.status(500).json({
+          error: 'Gemini không chấp nhận cấu hình hiện tại. Cần API key Gemini hợp lệ hoặc Vertex AI credentials có quyền dùng model.',
+        });
+      }
+
+      return res.status(500).json({ error: errorMessage });
     }
   }
 }
