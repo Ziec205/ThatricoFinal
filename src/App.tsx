@@ -16,6 +16,7 @@ import { CartProvider } from './CartContext';
 import { AppProvider, useAppContext } from './AppContext';
 import React, { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
+import AIChatWidget from './components/AIChatWidget';
 
 // Scroll to top on route change
 function ScrollToTop() {
@@ -80,6 +81,7 @@ export default function App() {
               <AnimatedRoutes />
             </main>
             <Footer />
+            <AIChatWidget />
           </div>
         </Router>
       </CartProvider>

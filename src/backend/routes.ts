@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { OrderController } from './controllers/OrderController';
 import { ProductController } from './controllers/ProductController';
 import { FileUploadController } from './controllers/FileUploadController';
+import { AiController } from './controllers/AiController';
 import { uploadMiddleware } from './middleware/uploadMiddleware';
 
 const router = Router();
@@ -18,6 +19,9 @@ router.delete('/orders/:id', OrderController.deleteOrder);
 
 // File upload
 router.post('/upload', uploadMiddleware.single('image'), FileUploadController.uploadImage);
+
+// AI chat
+router.post('/ai/chat', AiController.chat);
 
 // Products
 router.get('/products', ProductController.getAllProducts);

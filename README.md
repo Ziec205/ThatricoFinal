@@ -11,6 +11,19 @@
    - **Xuất hóa đơn (Invoice)**: Bấm nút xuất hóa đơn, hệ thống sẽ lấy dữ liệu đơn hàng (tên, SĐT, danh sách sản phẩm...) tạo thành mã QR Code và gửi Email cho khách.
 3. **Lưu local toàn bộ dữ liệu**: Sản phẩm và đơn hàng được lưu trong file SQLite ở máy local, nên thêm/sửa sản phẩm sẽ hiện lại ngay sau khi tải lại trang.
 
+## Chatbox AI hỗ trợ nông nghiệp
+
+- Ứng dụng có sẵn một pop-up chat nhỏ ở góc phải màn hình để người dùng không chuyên có thể hỏi nhanh về cây trồng, phân bón, sâu bệnh và cách chăm sóc.
+- Chatbox dùng Gemini qua backend API `/api/ai/chat`, nên không lộ key ra frontend.
+- Khi deploy lên Render, hãy thêm biến môi trường `GEMINI_API_KEY` và nếu muốn thì đặt `GEMINI_MODEL` (mặc định là `gemini-2.0-flash`).
+
+Ví dụ biến môi trường cần có trên Render:
+
+```bash
+GEMINI_API_KEY=your_key_here
+GEMINI_MODEL=gemini-2.0-flash
+```
+
 ## Cài đặt và chạy trên Visual Studio Code
 
 1. **Giải nén dự án** và mở thư mục bằng Visual Studio Code (VS Code).
